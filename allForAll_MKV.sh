@@ -56,7 +56,7 @@ create_dir_if_not_exists input_frames
 
 # 获取帧率
 fps=$(ffprobe -v error -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate "../$input_mk" | bc -l)
-log_and_print "\nFPS: $fps"
+log_and_print "FPS: $fps"
 
 # 获取总时长（秒）
 duration=$(ffprobe -v error -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 -show_entries format=duration "../$input_mk" | bc -l)
@@ -102,7 +102,7 @@ output_frame_count=$(ls output_frames | wc -l)
 
 # 只有当 output_frames 中的图片数量少于 num_frames_needed 时才运行 ifrnet-ncnn-vulkan
 if [ "$output_frame_count" -lt "$num_frames_needed" ]; then
-    log_and_print "Running ifrnet-ncnn-vulkan..."
+    log_and_print "\nRunning ifrnet-ncnn-vulkan..."
     start_time=$(date +%s)
     create_dir_if_not_exists output_frames
     ../ifrnet-ncnn-vulkan -m ../IFRNet_GoPro -i input_frames -o output_frames -g -1,-1,0,1 -j 8:4,4,2,2:8 -n "$num_frames_needed" -s $time_step
@@ -111,11 +111,11 @@ if [ "$output_frame_count" -lt "$num_frames_needed" ]; then
     end_time=$(date +%s)
     log_and_print "ifrnet-ncnn-vulkan run time: $((end_time - start_time)) seconds"
 else
-    log_and_print "Skipping ifrnet-ncnn-vulkan: output_frames contains $output_frame_count files, which meets or exceeds the required $num_frames_needed frames."
+    log_and_print "\nSkipping ifrnet-ncnn-vulkan: output_frames contains $output_frame_count files, which meets or exceeds the required $num_frames_needed frames."
 fi
 
 # Encode interpolated frames
-log_and_print "Encoding video..."
+log_and_print "\nEncoding video..."
 start_time=$(date +%s)
 ffmpeg -framerate 120 -i output_frames/%08d.png -i audio.m4a -c:a copy -crf 18 -c:v libx264 -pix_fmt yuv420p output.mp4
 

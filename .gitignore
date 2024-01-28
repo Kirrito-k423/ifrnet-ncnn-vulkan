@@ -1,0 +1,7 @@
+*/*
+*.mp4
+*.mkv
+LICENSE
+ifrnet-ncnn-vulkan
+times.log
+!allForAll_MKV.sh

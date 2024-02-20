@@ -89,11 +89,12 @@ log_and_print "Decode frames: $((end_time - start_time)) seconds"
 frame_count=$(ls input_frames | wc -l)
 
 # Calculate the number of frames needed for 120fps based on the original frame rate
-fps_rounded=$(printf "%.0f" "$fps")
-log_and_print "FPS: $fps_rounded"
-num_frames_needed=$((frame_count * 120 / fps_rounded))
+
+# 使用带有小数的fps进行计算，以提高精度
+num_frames_needed=$(echo "scale=0; $frame_count * 120 / $fps" | bc)
 log_and_print "num_frames_needed: $num_frames_needed"
-time_step=$(echo "scale=2; $fps_rounded / 120" | bc)
+
+time_step=$(echo "scale=5; $fps / 120" | bc)
 log_and_print "time_step: $time_step"
 
 

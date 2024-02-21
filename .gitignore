@@ -1,6 +1,7 @@
 */*
 *.mp4
 *.mkv
+*.zip
 LICENSE
 ifrnet-ncnn-vulkan
 times.log

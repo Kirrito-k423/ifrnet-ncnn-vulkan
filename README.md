@@ -1,4 +1,17 @@
-# IFRNet ncnn Vulkan
+
+
+# Windows
+
+git bash set `.bashrc`
+
+```bash
+export PATH=/e/commonSoftware/ifrnet-ncnn-vulkan-20220720-windows:/e/commonSoftware/ffmpeg-master-latest-win64-gpl/bin:$PATH
+```
+
+
+# Other
+
+## IFRNet ncnn Vulkan
 
 :exclamation: :exclamation: :exclamation: This software is in the early development stage, it may bite your cat
 

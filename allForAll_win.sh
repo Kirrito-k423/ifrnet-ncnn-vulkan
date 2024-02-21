@@ -17,17 +17,16 @@ create_dir_if_not_exists() {
     fi
 }
 
-
-# Input MKV file
-input_mk="$1"
+# Input video file
+input_video="$1"
 
 # Extract filename without extension for the directory name
-filename=$(basename "$input_mk" .mkv)
+filename=$(basename "$input_video" | sed 's/\(.*\)\..*/\1/')
 
 # Create a timestamped directory including the filename
 timestamp="${filename}"
 mkdir -p "$timestamp"
-cd "$timestamp"
+cd "$timestamp" || exit
 
 # Record start time
 start_time=$(date +%s)
@@ -37,7 +36,7 @@ log_and_print "\nNew task $(date -d @$start_time '+%Y-%m-%d %H:%M:%S')"
 # Check if audio.m4a already exists
 if [ ! -f "audio.m4a" ]; then
     log_and_print "Extracting audio..."
-    ffmpeg -i "../$input_mk" -map 0:a:0 -vn -acodec copy audio.m4a
+    ffmpeg.exe -i "../$input_video" -map 0:a:0 -vn -acodec copy audio.m4a
 else
     log_and_print "Audio file already exists, skipping extraction."
 fi
@@ -51,33 +50,26 @@ log_and_print "\nDecoding frames..."
 start_time=$(date +%s)
 create_dir_if_not_exists input_frames
 
-# total_frames is too slow, about 1/3  of decode time
-# total_frames=$(ffprobe -v error -select_streams v:0 -count_frames -show_entries stream=nb_read_frames -of default=nokey=1:noprint_wrappers=1 "../$input_mk")
-
 # 获取帧率
-fps=$(ffprobe -v error -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate "../$input_mk" | bc -l)
+fps=$(ffprobe.exe -v error -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate "../$input_video" | bc -l)
 log_and_print "FPS: $fps"
 
 # 获取总时长（秒）
-duration=$(ffprobe -v error -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 -show_entries format=duration "../$input_mk" | bc -l)
+duration=$(ffprobe.exe -v error -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 -show_entries format=duration "../$input_video" | bc -l)
 log_and_print "Duration: $duration seconds"
 
 # 计算估算的总帧数
 estimated_total_frames=$(echo "$fps * $duration" | bc | awk '{printf("%d\n", $1)}')
 log_and_print "Estimated total frames: $estimated_total_frames"
 
-# 计算75%的目标帧数
-target_frame_count=$(echo "$estimated_total_frames * 0.75" | bc | awk '{printf("%d\n", $1)}')
-log_and_print "Target frame count (75%): $target_frame_count"
-
 frame_files_count=$(ls input_frames | wc -l)
 log_and_print "Current frame files count: $frame_files_count"
 
-if [ "$frame_files_count" -ge "$target_frame_count" ]; then
+if [ "$frame_files_count" -ge "$estimated_total_frames" ]; then
     log_and_print "All frames have been generated."
 else
     log_and_print "Frame generation might be incomplete."
-    ffmpeg -i "../$input_mk" -map 0:v:0 input_frames/frame_%08d.png
+    ffmpeg.exe -i "../$input_video" -map 0:v:0 input_frames/frame_%08d.png
 fi
 
 # Log time taken
@@ -106,7 +98,7 @@ if [ "$output_frame_count" -lt "$num_frames_needed" ]; then
     log_and_print "\nRunning ifrnet-ncnn-vulkan..."
     start_time=$(date +%s)
     create_dir_if_not_exists output_frames
-    ../ifrnet-ncnn-vulkan -m ../IFRNet_GoPro -i input_frames -o output_frames -g -1,-1,0,1 -j 8:4,4,2,2:8 -n "$num_frames_needed" -s $time_step
+    ifrnet-ncnn-vulkan.exe -m ../IFRNet_GoPro -i input_frames -o output_frames -g -1,-1,0,1 -j 8:4,4,2,2:8 -n "$num_frames_needed" -s $time_step
 
     # 记录 ifrnet-ncnn-vulkan 运行时间
     end_time=$(date +%s)
@@ -118,7 +110,7 @@ fi
 # Encode interpolated frames
 log_and_print "\nEncoding video..."
 start_time=$(date +%s)
-ffmpeg -framerate 120 -i output_frames/%08d.png -i audio.m4a -c:a copy -crf 18 -c:v libx264 -pix_fmt yuv420p output.mp4
+ffmpeg.exe -framerate 120 -i output_frames/%08d.png -i audio.m4a -c:a copy -crf 18 -c:v libx264 -pix_fmt yuv420p output.mp4
 
 # Log time taken
 end_time=$(date +%s)
@@ -130,5 +122,7 @@ cd ..
 log_and_print "All operations completed. Time log is in the $timestamp/times.log file."
 
 read -p "Press any key to continue..."
+
+
 
 

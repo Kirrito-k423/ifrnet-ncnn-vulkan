@@ -8,6 +8,28 @@ git bash set `.bashrc`
 export PATH=/e/commonSoftware/ifrnet-ncnn-vulkan-20220720-windows:/e/commonSoftware/ffmpeg-master-latest-win64-gpl/bin:$PATH
 ```
 
+# 解析
+
+```bash
+ffmpeg.exe -i "../$input_video" -map 0:v:0 input_frames/frame_%08d.png
+# 处理器	Intel(R) Core(TM) i7-10700 CPU @ 2.90GHz，2904 Mhz，8 个内核，16 个逻辑处理器
+frame=1192388 fps=93 q=-0.0 size=N/A time=00:00:01.83 bitrate=N/A dup=1197228 drop=0 speed=0.000143x
+# Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz （32 cores）
+frame=175897 fps=2319 q=-0.0 size=N/A time=00:00:00.27 bitrate=N/A dup=175864 drop=0 speed=0.00357x
+```
+
+输出的其他信息是关于当前处理状态的详情：
+
+- `frame=119238`：表示已经处理了 119238 帧。
+- `fps=93`：表示处理的速度是每秒 93 帧。
+- `q=-0.0`：表示输出文件的质量，通常用于指定压缩率，`-1` 表示最好的质量。
+- `size=N/A`：表示当前处理的帧的大小，N/A 通常意味着这个信息不适用，可能是因为正在处理的是单个帧，而不是连续的视频流。
+- `time=00:01:01.83`：表示已经处理的视频长度，这里是 1 分 1.83 秒。
+- `bitrate=N/A`：表示视频的比特率，N/A 表示不适用或不可用。
+- `dup=1197228`：表示有多少帧被复制，可能是因为在提取帧时遇到了重复的帧。
+- `drop=0`：表示有多少帧被丢弃。
+- `speed=0.000143x`：表示处理的速度是正常播放速度的多少倍，这里大约是 1/7000 倍，意味着处理速度非常慢，这可能是因为命令在执行时已经接近完成。
+
 
 # Other
 

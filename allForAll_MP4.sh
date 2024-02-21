@@ -71,7 +71,11 @@ if [ "$frame_files_count" -ge "$estimated_total_frames" ]; then
 else
     log_and_print "Frame generation might be incomplete."
     # 丢弃大量重复帧
-    ffmpeg -i "../$input_video" -vf "mpdecimate=hi=64*12:lo=64*8:frac=0.33" -vsync vfr -map 0:v:0 input_frames/frame_%08d.png
+    ffmpeg -i "../$input_video" -vf "mpdecimate=max=16*12:hi=16*6:lo=16*4:frac=0.2" -vsync vfr -map 0:v:0 input_frames/frame_%08d.png
+    # the same
+    # ffmpeg -i "../$input_video" -vf "mpdecimate" -vsync vfr -map 0:v:0 input_frames/frame_%08d.png
+    # 效果糟糕 57445 frames
+    # ffmpeg -i "../$input_video" -vf "mpdecimate=hi=64*12:lo=64*8:frac=0.33" -vsync vfr -map 0:v:0 input_frames/frame_%08d.png
     # ffmpeg -i "../$input_video" -map 0:v:0 input_frames/frame_%08d.png
 fi
 

@@ -49,9 +49,10 @@ log_and_print "Extract audio: $((end_time - start_time)) seconds"
 log_and_print "\nDecoding frames..."
 start_time=$(date +%s)
 create_dir_if_not_exists input_frames
+create_dir_if_not_exists output_frames
 
 # 获取帧率
-fps=$(ffprobe -v error -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate "../$input_video" | bc -l)
+fps=$(ffprobe -v error -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 -show_entries stream=avg_frame_rate "../$input_video" | awk -F'/' '{ print ($1 / $2) }')
 log_and_print "FPS: $fps"
 
 # 获取总时长（秒）
@@ -69,7 +70,9 @@ if [ "$frame_files_count" -ge "$estimated_total_frames" ]; then
     log_and_print "All frames have been generated."
 else
     log_and_print "Frame generation might be incomplete."
-    ffmpeg -i "../$input_video" -map 0:v:0 input_frames/frame_%08d.png
+    # 丢弃大量重复帧
+    ffmpeg -i "../$input_video" -vf "mpdecimate=hi=64*12:lo=64*8:frac=0.33" -vsync vfr -map 0:v:0 input_frames/frame_%08d.png
+    # ffmpeg -i "../$input_video" -map 0:v:0 input_frames/frame_%08d.png
 fi
 
 # Log time taken
@@ -83,10 +86,12 @@ frame_count=$(ls input_frames | wc -l)
 # Calculate the number of frames needed for 120fps based on the original frame rate
 
 # 使用带有小数的fps进行计算，以提高精度
-num_frames_needed=$(echo "scale=0; $frame_count * 120 / $fps" | bc)
+# num_frames_needed=$(echo "scale=0; $frame_count * 120 / $fps" | bc)
+num_frames_needed=$(echo "($duration * 120)/1" | bc)
 log_and_print "num_frames_needed: $num_frames_needed"
 
-time_step=$(echo "scale=5; $fps / 120" | bc)
+fps_fixed=$(echo "scale=5; $frame_count / $duration" | bc)
+time_step=$(echo "scale=5; $fps_fixed / 120" | bc)
 log_and_print "time_step: $time_step"
 
 
@@ -98,7 +103,7 @@ if [ "$output_frame_count" -lt "$num_frames_needed" ]; then
     log_and_print "\nRunning ifrnet-ncnn-vulkan..."
     start_time=$(date +%s)
     create_dir_if_not_exists output_frames
-    ifrnet-ncnn-vulkan -m ../IFRNet_GoPro -i input_frames -o output_frames -g -1,-1,0,1 -j 8:4,4,2,2:8 -n "$num_frames_needed" -s $time_step
+    ../ifrnet-ncnn-vulkan -m ../IFRNet_GoPro -i input_frames -o output_frames -g -1,-1,0,1 -j 8:4,4,2,2:8 -n "$num_frames_needed" -s $time_step
 
     # 记录 ifrnet-ncnn-vulkan 运行时间
     end_time=$(date +%s)

@@ -2,6 +2,19 @@
 > [!CAUTION]
 > 注意片源，选择常规的24帧的视频，类似变帧率的90fps视频，现阶段难以处理。
 
+# Ubuntu
+
+## Install
+
+```bash
+sudo apt install ffmpeg
+
+
+
+```
+
+
+
 # Windows
 
 git bash set `.bashrc`

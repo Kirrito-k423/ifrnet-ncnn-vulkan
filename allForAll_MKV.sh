@@ -35,9 +35,10 @@ start_time=$(date +%s)
 log_and_print "\nNew task $(date -d @$start_time '+%Y-%m-%d %H:%M:%S')"
 
 # Check if audio.m4a already exists
-if [ ! -f "audio.m4a" ]; then
+if [ ! -f "audio.mkv" ]; then
     log_and_print "Extracting audio..."
-    ffmpeg -i "../$input_mk" -map 0:a:0 -vn -acodec copy audio.m4a
+    ffmpeg -i "../$input_mk" -map 0:a:0 -vn -acodec copy audio.mkv
+    # ffmpeg -i "../$input_mk" -map 0:a:0 -vn -acodec copy audio.m4a
 else
     log_and_print "Audio file already exists, skipping extraction."
 fi
@@ -118,7 +119,9 @@ fi
 # Encode interpolated frames
 log_and_print "\nEncoding video..."
 start_time=$(date +%s)
-ffmpeg -framerate 120 -i output_frames/%08d.png -i audio.m4a -c:a copy -crf 18 -c:v libx264 -pix_fmt yuv420p output.mp4
+ffmpeg -framerate 120 -thread_queue_size 512 -i output_frames/%08d.png -i audio.mkv -c:a aac -crf 18 -c:v libx264 -pix_fmt yuv420p "output_$input_mk.mp4"
+# ffmpeg -framerate 120 -i output_frames/%08d.png -i audio.mkv -c:a copy -crf 18 -c:v libx264 -pix_fmt yuv420p output.mp4
+# ffmpeg -framerate 120 -i output_frames/%08d.png -i audio.m4a -c:a copy -crf 18 -c:v libx264 -pix_fmt yuv420p output.mp4
 
 # Log time taken
 end_time=$(date +%s)
